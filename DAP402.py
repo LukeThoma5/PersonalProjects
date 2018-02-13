@@ -1,4 +1,6 @@
 import pickle;
+import numpy as np;
+import matplotlib.pyplot as plt;
 
 FILE_LOCATION = "currencies.bin";
 class Currencies:
@@ -34,17 +36,12 @@ class Currencies:
         else:
             this.lookup[result.key] = 1/value;
 
-    def getConversion(this, fromKey, toKey, attendedNodes=[], directIfAvailable=False):
-        ## If specified we want direct route no matter what
-        if directIfAvailable and this.getKey(fromKey, toKey).key in this.lookup:
-            return ConversionResult(this.getConversionDirect(fromKey, toKey), [fromKey, toKey]);
-        
-        ## Otherwise find the best route, including direct routes
+    def getAllConversions(this, fromKey, toKey, attendedNodes=[], directIfAvailable=False):
         lookupKeys = this.lookup.keys();
         conversions = [];
         for key in lookupKeys:
             # Get direct value if avalable
-            if fromKey in key and toKey in key:
+            if this.getKey(fromKey, toKey).key == key:
                 conversions.append(ConversionResult(this.getConversionDirect(fromKey, toKey), [fromKey, toKey]));
             #If we find a key that contains a link to where we are
             elif fromKey in key:
@@ -71,7 +68,17 @@ class Currencies:
                     conversion = ConversionResult(directConversion * tailConversion.rate, path);
                     conversions.append(conversion);
         #Sort the conversions in decending order of conversion rate, best first
-        conversions.sort(key=lambda conversion: conversion.rate, reverse=True)
+        conversions.sort(key=lambda conversion: conversion.rate, reverse=True);
+
+        return conversions;
+
+    def getConversion(this, fromKey, toKey, attendedNodes=[], directIfAvailable=False):
+        ## If specified we want direct route no matter what
+        if directIfAvailable and this.getKey(fromKey, toKey).key in this.lookup:
+            return ConversionResult(this.getConversionDirect(fromKey, toKey), [fromKey, toKey]);
+        
+        ## Otherwise find the best route, including direct routes
+        conversions = this.getAllConversions(fromKey, toKey, attendedNodes, directIfAvailable);
         #If we have a conversion return it
         if len(conversions) > 0:
             return conversions[0];
@@ -132,14 +139,25 @@ class Currencies:
         except (e):
             print("Save failed!", e);
 
-    def getGraphData(this):
-        conversions = [];
-        for fromKey in this.symbols:
-            for toKey in this.symbols:
-                if (fromKey != toKey):
-                    conversions.append((this.getConversion(fromKey, toKey).rate,
-                    this.getConversion(fromKey, toKey, directIfAvailable=True).rate));
-        print(conversions);
+    def getGraphData(this, currency):
+        plotsOfPlots = [];
+        labels = [];
+        for comparison in this.symbols:
+            if comparison == currency:
+                continue;
+            conversions = this.getAllConversions(currency, comparison);
+            graphData = [];
+            for conversion in conversions:
+                if (conversion.successful):
+                    graphData.append(conversion.rate)
+            plotsOfPlots.append(graphData);
+            labels.append(comparison);
+
+        fig, ax = plt.subplots();
+        plt.boxplot(plotsOfPlots, labels=labels);
+        plt.show();
+        
+        
         
 class KeyResult:
     def __init__(this, key, correctOrder):
@@ -207,10 +225,12 @@ def main():
 
     currencies.prettyConvert("USD", "YEN", 1500);
     currencies.prettyConvert("USD", "YEN", 1500, True);
+    currencies.prettyConvert("USD", "USD", 1000);
 
     currencies.prettyConvert("NOTEXISTING", "USD", 1500);
     currencies.save();
 
-    currencies.getGraphData();
+    currencies.getGraphData("USD");
 
-main();
+if __name__ == "__main__":
+    main();
