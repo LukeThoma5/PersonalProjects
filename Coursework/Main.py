@@ -1,8 +1,5 @@
 import pickle;
-import numpy as np;
-import matplotlib.pyplot as plt;
-
-FILE_LOCATION = "exchangeRates.bin";  
+from Graph import Graph, FILE_LOCATION;
 
 def makeGraph():
   print("Making Graph");

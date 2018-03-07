@@ -1,1 +1,3 @@
 *.bin
+Coursework/__pycache__/
+.vscode/
