@@ -8,32 +8,32 @@ import pickle;
 FILE_LOCATION = "exchangeRates.bin"; 
 class Graph:
     
-  def __init__(this):
-    this.allNodes = {};
+  def __init__(self):
+    self.allNodes = {};
     
-  def save(this):
-    pickle.dump(this, open(FILE_LOCATION, "wb"))
+  def save(self):
+    pickle.dump(self, open(FILE_LOCATION, "wb"))
         
-  def addNode(this, name):
-    this.allNodes[name] = Node(this, name);
+  def addNode(self, name):
+    self.allNodes[name] = Node(self, name);
         
-  def getNode(this, name):
-    return this.allNodes[name];
+  def getNode(self, name):
+    return self.allNodes[name];
     
-  def addLink(this, nameA, nameB, value):
-    nodeA = this.getNode(nameA);
-    nodeB = this.getNode(nameB);
+  def addLink(self, nameA, nameB, value):
+    nodeA = self.getNode(nameA);
+    nodeB = self.getNode(nameB);
     NodeLink(value, nodeA, nodeB);
         
-  def getExchangeRate(this, nameA, nameB):
-    return this.getNode(nameA).getExchangeRate(nameB);
+  def getExchangeRate(self, nameA, nameB):
+    return self.getNode(nameA).getExchangeRate(nameB);
   
-  def getExchangeRateBest(this, nameA, nameB):
-    start = this.getNode(nameA);
-    destination = this.getNode(nameB);
-    return this.getExchangeRateRec(start, destination, []);
+  def getExchangeRateBest(self, nameA, nameB):
+    start = self.getNode(nameA);
+    destination = self.getNode(nameB);
+    return self.getExchangeRateRec(start, destination, []);
   
-  def getAllRates(this, fromNode, destination, attendedNodes = []):
+  def getAllRates(self, fromNode, destination, attendedNodes = []):
     attendedNodes.append(fromNode);
     conversions = [];
     for link in fromNode.nodes:
@@ -46,7 +46,7 @@ class Graph:
         nodes = attendedNodes[:]
         nodes.append(current);
         directConversion = fromNode.getExchangeRate(current.name);
-        tailConversion = this.getExchangeRateRec(current, destination, nodes);
+        tailConversion = self.getExchangeRateRec(current, destination, nodes);
         if (tailConversion.successful):
           path = [fromNode];
           path.extend(tailConversion.path);
@@ -55,8 +55,8 @@ class Graph:
     conversions.sort(key=lambda conversion: conversion.rate, reverse=True);
     return conversions;
   
-  def getExchangeRateRec(this, fromNode, destination, attendedNodes = []):
-    conversions = this.getAllRates(fromNode, destination, attendedNodes);
+  def getExchangeRateRec(self, fromNode, destination, attendedNodes = []):
+    conversions = self.getAllRates(fromNode, destination, attendedNodes);
     
     if len(conversions) > 0:
       return conversions[0];
@@ -64,15 +64,15 @@ class Graph:
     print("WARNING: INVALID ROUTE", fromNode.name, destination.name);
     return ConversionResult(-1, [], successful=False);
   
-  def getGraphData(this, currency):
+  def getGraphData(self, currency):
     plotsOfPlots = [];
     labels = [];
-    start = this.getNode(currency);
-    for comparison in this.allNodes.keys():
+    start = self.getNode(currency);
+    for comparison in self.allNodes.keys():
       if comparison == currency:
         continue;
-      comp = this.getNode(comparison)
-      conversions = this.getAllRates(start, comp, []);
+      comp = self.getNode(comparison)
+      conversions = self.getAllRates(start, comp, []);
       graphData = [];
       print(start.name, comp.name, conversions);
       for conversion in conversions:
@@ -81,10 +81,18 @@ class Graph:
       plotsOfPlots.append(graphData);
       labels.append(comparison);
 
+    return (plotsOfPlots, labels);
+    
+
+  def plotGraph(self, currency):
+    plotsOfPlots, labels = self.getGraphData(currency);
     fig, ax = plt.subplots();
     plt.boxplot(plotsOfPlots, labels=labels);
     plt.show();
     
-  def printAllGraphs(this):
-    for nodeKey in this.allNodes.keys():
-      this.getGraphData(nodeKey)
+  def printAllGraphs(self):
+    for nodeKey in self.allNodes.keys():
+      self.plotGraph(nodeKey)
+
+  def getAllCurrencies(self):
+    return self.allNodes.keys()

@@ -13,7 +13,7 @@ class ConversionResult:
     return round(this.rate, places);
 
   def getResultFormatted(this, places=2):
-    return round(this.value, places);
+    return str(round(this.value, places));
 
   def getPath(this):
     return ' => '.join(map(lambda x: x.name, this.path));
