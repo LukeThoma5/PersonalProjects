@@ -14,6 +14,18 @@ class Node:
             return link.getExchangeRate(self)
         print("not found")
     return -1
+
+  def hasLink(self, nodeName):
+    for link in self.nodes:
+        if link.containsNode(nodeName):
+          return True
+    return False
+
+  def updateLink(self, nodeName, A2B, B2A=None):
+    for link in self.nodes:
+        if link.containsNode(nodeName):
+          link.updateLink(self.name, nodeName, A2B, B2A)
+  
     
   def print(self):
       print("-"*30)

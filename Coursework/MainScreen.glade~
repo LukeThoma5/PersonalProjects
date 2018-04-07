@@ -2,6 +2,126 @@
 <!-- Generated with glade 3.19.0 -->
 <interface>
   <requires lib="gtk+" version="3.12"/>
+  <object class="GtkWindow" id="AdminWindow">
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkBox" id="box3">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkGrid" id="grid3">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkComboBoxText" id="CURRENCY_TO_ADMIN">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="active_id">CURRENCY_TO_PICKED</property>
+                <signal name="realize" handler="CURRENCY_FROM_ON_LOAD" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">2</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBoxText" id="CURRENCY_FROM_ADMIN">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="active_id">CURRENCY_FROM_PICKED</property>
+                <signal name="realize" handler="CURRENCY_FROM_ON_LOAD" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="new_currency_entry">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="max_length">5</property>
+                <property name="placeholder_text" translatable="yes">CURRENCY CODE</property>
+                <property name="input_purpose">alpha</property>
+                <property name="input_hints">GTK_INPUT_HINT_UPPERCASE_CHARS | GTK_INPUT_HINT_NONE</property>
+              </object>
+              <packing>
+                <property name="left_attach">3</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="new_currency_button">
+                <property name="label" translatable="yes">Add Currency</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="relief">none</property>
+                <signal name="clicked" handler="on_new_currency_button_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkGrid" id="grid4">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkEntry" id="A2B_RATE">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="placeholder_text" translatable="yes">Left To Right Rate</property>
+                <property name="input_purpose">number</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="B2A_RATE">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="placeholder_text" translatable="yes">Right to Left Rate</property>
+                <property name="input_purpose">number</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="UPDATE_RATE_BUTTON">
+                <property name="label" translatable="yes">Update Rate</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">2</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
   <object class="GtkWindow" id="ConversionWindow">
     <property name="can_focus">False</property>
     <child>
@@ -18,6 +138,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="active_id">CURRENCY_TO_PICKED</property>
+                <signal name="realize" handler="CURRENCY_FROM_ON_LOAD" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">2</property>
@@ -30,6 +151,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="hexpand">True</property>
                 <signal name="clicked" handler="CONVERT" swapped="no"/>
               </object>
               <packing>
@@ -42,6 +164,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="active_id">CURRENCY_FROM_PICKED</property>
+                <signal name="realize" handler="CURRENCY_FROM_ON_LOAD" swapped="no"/>
                 <signal name="window-state-event" handler="CURRENCY_FROM_ON_LOAD" swapped="no"/>
               </object>
               <packing>
@@ -54,21 +177,6 @@
             <property name="expand">True</property>
             <property name="fill">True</property>
             <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkButton" id="LOAD_CURRENCIES">
-            <property name="label" translatable="yes">Load Currencies</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="relief">half</property>
-            <signal name="clicked" handler="LOAD_CURRENCIES" swapped="no"/>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
           </packing>
         </child>
         <child>

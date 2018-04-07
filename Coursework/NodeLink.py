@@ -23,6 +23,16 @@ class NodeLink:
   def containsNode(self, nodeName):
     return self.nodeA.name == nodeName or self.nodeB.name == nodeName
 
+  def updateLink(self, A, B, A2B, B2A=None):
+    if self.nodeA.name == A:
+      self.A2B = A2B
+      if B2A is None:
+        self.B2A = 1/A2B
+    else:
+      self.B2A = A2B
+      if B2A is None:
+        self.A2B = 1/A2B
+
   def print(self):
     print("{} => {} : {}".format(self.nodeA.name, self.nodeB.name, self.A2B))
  

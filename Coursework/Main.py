@@ -19,6 +19,7 @@ class Converter:
     self.builder.connect_signals(MainHandler(self.graph, self))
     self.MainWindow = self.builder.get_object("MainWindow")
     self.ConversionWindow = self.builder.get_object("ConversionWindow")
+    self.AdminWindow = self.builder.get_object("AdminWindow")
     self.MainWindow.show_all()
     
     Gtk.main()
@@ -65,9 +66,10 @@ class MainHandler:
 
   def MW_ADMIN_CLICK(self, button):
     print("ADMIN")
+    self.converter.AdminWindow.show_all()
   
-  def CURRENCY_FROM_ON_LOAD(self, combo, box):
-    print("hello", combo, box)
+  def CURRENCY_FROM_ON_LOAD(self, combo):
+    print("hello", combo)
     currencies = self.graph.getAllCurrencies()
     for currency in currencies:
       combo.append_text(currency)
@@ -92,7 +94,18 @@ class MainHandler:
     conversionResult.updateValue(float(amount))
     self.converter.builder.get_object("CONVERSION_RESULT").get_buffer().set_text(conversionResult.getResultFormatted())
     self.converter.builder.get_object("CONVERSION_EXPLAIN").get_buffer().set_text(conversionResult.__str__())
-    
+  
+  def on_new_currency_button_clicked(self, button):
+    pass
+  
+  def update_rate_button_clicked(self, button):
+    A2B = self.converter.builder.get_object("A2B_RATE").get_text()
+    B2A = self.converter.builder.get_object("B2A_RATE").get_text()
+    if B2A is not None:
+      B2A = float(B2A)
+    A = self.converter.builder.get_object("CURRENCY_FROM_ADMIN").get_active_text()
+    B = self.converter.builder.get_object("CURRENCY_TO_ADMIN").get_active_text()
+    self.graph.addLink(A, B, float(A2B), B2A)
 
 
 def main():

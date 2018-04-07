@@ -23,7 +23,10 @@ class Graph:
   def addLink(self, nameA, nameB, A2B, B2A=None):
     nodeA = self.getNode(nameA)
     nodeB = self.getNode(nameB)
-    NodeLink(nodeA, nodeB, A2B, B2A)
+    if not nodeA.hasLink(nameB):
+      NodeLink(nodeA, nodeB, A2B, B2A)
+    else:
+      nodeA.updateLink(nameB, A2B, B2A)
         
   def getExchangeRate(self, nameA, nameB):
     return self.getNode(nameA).getExchangeRate(nameB)
