@@ -1,24 +1,28 @@
 class NodeLink:
-  def __init__(this, value, nodeA, nodeB):
-    this.value = value;
-    this.nodeA = nodeA;
-    this.nodeB = nodeB;
-    this.nodeA.addLink(this);
-    this.nodeB.addLink(this);
+  def __init__(self, nodeA, nodeB, A2B, B2A=None):
+    self.A2B = A2B
+    if B2A is None:
+      self.B2A = 1 / self.A2B
+    else:
+      self.B2A = B2A
+    self.nodeA = nodeA
+    self.nodeB = nodeB
+    self.nodeA.addLink(self)
+    self.nodeB.addLink(self)
     
-  def getConnectingNode(this, current):
-    if (this.nodeA is current):
-      return this.nodeB;
-    return this.nodeA;
+  def getConnectingNode(self, current):
+    if (self.nodeA is current):
+      return self.nodeB
+    return self.nodeA
     
-  def getExchangeRate(this, current):
-    if (this.nodeA is current):
-      return this.value;
-    return 1 / this.value;
+  def getExchangeRate(self, current):
+    if (self.nodeA is current):
+      return self.A2B
+    return self.B2A
     
-  def containsNode(this, nodeName):
-    return this.nodeA.name == nodeName or this.nodeB.name == nodeName;
+  def containsNode(self, nodeName):
+    return self.nodeA.name == nodeName or self.nodeB.name == nodeName
 
-  def print(this):
-    print("{} => {} : {}".format(this.nodeA.name, this.nodeB.name, this.value))
+  def print(self):
+    print("{} => {} : {}".format(self.nodeA.name, self.nodeB.name, self.A2B))
  

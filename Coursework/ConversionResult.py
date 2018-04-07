@@ -1,33 +1,33 @@
 class ConversionResult:
-  def __init__(this, rate, path = [], successful=True):
-    this.rate = rate;
-    this.path = path;
-    this.value = 0;
-    this.successful = successful;
+  def __init__(self, rate, path = [], successful=True):
+    self.rate = rate
+    self.path = path
+    self.value = 0
+    self.successful = successful
 
-  def updateValue(this, value):
-    this.value = value * this.rate;
-    return this; #Allow chaining of conversion results. Fluent syntax
+  def updateValue(self, value):
+    self.value = value * self.rate
+    return self #Allow chaining of conversion results. Fluent syntax
 
-  def getRateFormatted(this, places=2):
-    return round(this.rate, places);
+  def getRateFormatted(self, places=2):
+    return round(self.rate, places)
 
-  def getResultFormatted(this, places=2):
-    return str(round(this.value, places));
+  def getResultFormatted(self, places=2):
+    return str(round(self.value, places))
 
-  def getPath(this):
-    return ' => '.join(map(lambda x: x.name, this.path));
+  def getPath(self):
+    return ' => '.join(map(lambda x: x.name, self.path))
 
-  def __repr__(this):
-    return this.__str__();
+  def __repr__(self):
+    return self.__str__()
 
-  def __str__(this):
+  def __str__(self):
     return "<Path: {}, Rate: {}, Success: {}>".format(
-      this.getPath(),
-      this.getRateFormatted(3),
-      this.successful);
+      self.getPath(),
+      self.getRateFormatted(3),
+      self.successful)
 
-    def invert(this):
-        this.rate = 1 / this.rate;
-        this.path.reverse();
+  def invert(self):
+    self.rate = 1 / self.rate
+    self.path.reverse()
    

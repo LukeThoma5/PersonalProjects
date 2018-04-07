@@ -1,25 +1,25 @@
 class Node:
   
-  def __init__(this, graph, name = ""):
-    this.graph = graph;
-    this.name = name;
-    this.nodes = [];
+  def __init__(self, graph, name = ""):
+    self.graph = graph
+    self.name = name
+    self.nodes = []
         
-  def addLink(this, link):
-    this.nodes.append(link);
+  def addLink(self, link):
+    self.nodes.append(link)
     
-  def getExchangeRate(this, nodeName):
-    for link in this.nodes:
+  def getExchangeRate(self, nodeName):
+    for link in self.nodes:
         if link.containsNode(nodeName):
-            return link.getExchangeRate(this);
-        print("not found");
-    return -1;
+            return link.getExchangeRate(self)
+        print("not found")
+    return -1
     
-  def print(this):
-      print("-"*30);
-      print(this.name, ":");
-      print(this.nodes);
-      for link in this.nodes:
-        print(link);
-        print("   ", link.getConnectingNode(this).name);
+  def print(self):
+      print("-"*30)
+      print(self.name, ":")
+      print(self.nodes)
+      for link in self.nodes:
+        print(link)
+        print("   ", link.getConnectingNode(self).name)
         
