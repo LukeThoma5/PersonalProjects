@@ -28,10 +28,14 @@ class NodeLink:
       self.A2B = A2B
       if B2A is None:
         self.B2A = 1/A2B
+      else:
+        self.B2A = B2A
     else:
       self.B2A = A2B
       if B2A is None:
         self.A2B = 1/A2B
+      else:
+        self.A2B = B2A
 
   def print(self):
     print("{} => {} : {}".format(self.nodeA.name, self.nodeB.name, self.A2B))

@@ -4,6 +4,7 @@ from ConversionResult import ConversionResult
 from NodeLink import NodeLink
 from Node import Node
 import pickle
+import csv
 
 FILE_LOCATION = "exchangeRates.bin" 
 class Graph:
@@ -16,6 +17,11 @@ class Graph:
         
   def addNode(self, name):
     self.allNodes[name] = Node(self, name)
+
+  def nodeExists(self, name):
+    if name in self.allNodes.keys():
+      return True
+    return False
         
   def getNode(self, name):
     return self.allNodes[name]
@@ -24,8 +30,10 @@ class Graph:
     nodeA = self.getNode(nameA)
     nodeB = self.getNode(nameB)
     if not nodeA.hasLink(nameB):
+      print("making new rate")
       NodeLink(nodeA, nodeB, A2B, B2A)
     else:
+      print("updating rate")
       nodeA.updateLink(nameB, A2B, B2A)
         
   def getExchangeRate(self, nameA, nameB):
@@ -99,3 +107,46 @@ class Graph:
 
   def getAllCurrencies(self):
     return self.allNodes.keys()
+
+  def calcRouteMatrix(self, delegate):
+    matrix = []
+    keys = list(self.allNodes.keys())
+    for currentNode in keys:
+      conversions = []
+      for comparisonNode in keys:
+        if (currentNode == comparisonNode):
+          conversion = str(-1)
+        else:
+          conversion = delegate(self, currentNode, comparisonNode)
+        conversions.append(conversion)
+      matrix.append(conversions)
+    return matrix
+
+  def exportRates(self, best, path):
+    if best:
+      delegate = matrixBest
+    else:
+      delegate = matrixDirect
+
+    matrix = self.calcRouteMatrix(delegate)
+    prettyKeys = [" "]
+    keys = list(self.allNodes.keys())
+    prettyKeys.extend(keys)
+    with open(path, 'w', newline='') as csvfile:
+      writer = csv.writer(csvfile, quoting=csv.QUOTE_MINIMAL)
+      writer.writerow(prettyKeys)
+      for index, conversions in enumerate(matrix):
+        item = keys[index]
+        row = [item]
+        row.extend(conversions)
+        writer.writerow(row)
+      
+
+def matrixBest(graph, currentNode, comparisonNode):
+  result = graph.getExchangeRateBest(currentNode, comparisonNode)
+  if (result.successful):
+    return str(result.rate)
+  return str(-1)
+
+def matrixDirect(graph, currentNode, comparisonNode):
+  return str(graph.getExchangeRate(currentNode, comparisonNode))

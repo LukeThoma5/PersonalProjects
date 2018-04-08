@@ -24,8 +24,9 @@ class Node:
   def updateLink(self, nodeName, A2B, B2A=None):
     for link in self.nodes:
         if link.containsNode(nodeName):
+          print("found link")
           link.updateLink(self.name, nodeName, A2B, B2A)
-  
+
     
   def print(self):
       print("-"*30)

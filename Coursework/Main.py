@@ -18,16 +18,10 @@ class Converter:
     self.builder.add_from_file("MainScreen.glade")
     self.builder.connect_signals(MainHandler(self.graph, self))
     self.MainWindow = self.builder.get_object("MainWindow")
+    self.LoginWindow = self.builder.get_object("LoginWindow")
     self.ConversionWindow = self.builder.get_object("ConversionWindow")
     self.AdminWindow = self.builder.get_object("AdminWindow")
-    self.MainWindow.show_all()
-    
-    Gtk.main()
-    # self.graph.getAllCurrencies()
-    
-    #graph.getGraphData("USD")
-    # graph.printAllGraphs()
-    self.graph.save()
+    self.LoginWindow.show_all()
 
   def run(self):
     Gtk.main()
@@ -51,22 +45,46 @@ class MainHandler:
     self.graph = graph
     self.converter = converter
 
+  def get(self, obj):
+    return self.converter.builder.get_object(obj)
+
   def onDeleteWindow(self, *args):
-    Gtk.main_quit(*args)
+    print("deleting window")
+    # Gtk.main_quit(*args)
 
   def MW_MAKE_EXCHANGE_CLICK(self, button):
     print("Make Exchange")
     
     self.converter.ConversionWindow.show_all()
 
+  def attempt_login(self, button):
+    username = self.converter.builder.get_object("USERNAME").get_text()
+    password = self.converter.builder.get_object("PASSWORD").get_text()
+    if username == "admin" and password == "admin":
+      self.converter.MainWindow.show_all()
+      self.converter.builder.get_object("BTN_MW_ADMIN").show()
+      self.converter.LoginWindow.destroy()
+
+  def guest_login(self, button):
+    self.converter.MainWindow.show_all()
+    self.converter.builder.get_object("BTN_MW_ADMIN").hide()
+    self.converter.LoginWindow.destroy()
+
   def MW_QUIT_CLICK(self, button):
     print("QUIT")
     self.graph.save()
     self.onDeleteWindow()
+    Gtk.main_quit()
 
   def MW_ADMIN_CLICK(self, button):
     print("ADMIN")
     self.converter.AdminWindow.show_all()
+
+  def export_rates(self, _):
+    self.graph.exportRates(False, "rates.direct.csv")
+
+  def export_best_rates(self, _):
+    self.graph.exportRates(True, "rates.indirect.csv")
   
   def CURRENCY_FROM_ON_LOAD(self, combo):
     print("hello", combo)
@@ -74,15 +92,15 @@ class MainHandler:
     for currency in currencies:
       combo.append_text(currency)
 
-  def LOAD_CURRENCIES(self, button):
-    combo_to = self.converter.builder.get_object("CURRENCY_TO")
-    combo_from = self.converter.builder.get_object("CURRENCY_FROM")
-    currencies = self.graph.getAllCurrencies()
-    print(currencies)
-    for currency in currencies:
-      combo_to.append_text(currency)
-      combo_from.append_text(currency)
-    button.hide()
+  # def LOAD_CURRENCIES(self, button):
+  #   combo_to = self.converter.builder.get_object("CURRENCY_TO")
+  #   combo_from = self.converter.builder.get_object("CURRENCY_FROM")
+  #   currencies = self.graph.getAllCurrencies()
+  #   print(currencies)
+  #   for currency in currencies:
+  #     combo_to.append_text(currency)
+  #     combo_from.append_text(currency)
+  #   button.hide()
 
   def CONVERT(self, button):
     toC = self.converter.builder.get_object("CURRENCY_TO").get_active_text()
@@ -96,7 +114,13 @@ class MainHandler:
     self.converter.builder.get_object("CONVERSION_EXPLAIN").get_buffer().set_text(conversionResult.__str__())
   
   def on_new_currency_button_clicked(self, button):
-    pass
+    codeObj = self.get("new_currency_entry")
+    code = codeObj.get_text().upper()
+    if not self.graph.nodeExists(code):
+      self.graph.addNode(code)
+      codeObj.set_text("")
+      self.get("CURRENCY_FROM_ADMIN").append_text(code)
+      self.get("CURRENCY_TO_ADMIN").append_text(code)
   
   def update_rate_button_clicked(self, button):
     A2B = self.converter.builder.get_object("A2B_RATE").get_text()
