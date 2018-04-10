@@ -8,10 +8,10 @@ class Node:
   def addLink(self, link):
     self.nodes.append(link)
     
-  def getExchangeRate(self, nodeName):
+  def getExchangeRate(self, nodeName, selector):
     for link in self.nodes:
         if link.containsNode(nodeName):
-            return link.getExchangeRate(self)
+            return link.getExchangeRate(self, selector)
         print("not found")
     return -1
 

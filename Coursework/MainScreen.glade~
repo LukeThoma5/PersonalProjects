@@ -73,14 +73,51 @@
           </packing>
         </child>
         <child>
+          <object class="GtkGrid" id="grid7">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="column_homogeneous">True</property>
+            <child>
+              <object class="GtkEntry" id="A2B_RATE_selling">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="placeholder_text" translatable="yes">Selling Rate: Left To Right</property>
+                <property name="input_purpose">number</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="B2A_RATE_selling">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="placeholder_text" translatable="yes">Right to Left Rate</property>
+                <property name="input_purpose">number</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkGrid" id="grid4">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="column_homogeneous">True</property>
             <child>
               <object class="GtkEntry" id="A2B_RATE">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="placeholder_text" translatable="yes">Left To Right Rate</property>
+                <property name="placeholder_text" translatable="yes">BuyingRate: Left To Right</property>
                 <property name="input_purpose">number</property>
               </object>
               <packing>
@@ -178,6 +215,22 @@
             <property name="expand">True</property>
             <property name="fill">True</property>
             <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkComboBoxText" id="conversion_rate_selector">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="active_id">buying</property>
+            <items>
+              <item id="buying" translatable="yes">buying</item>
+              <item id="selling" translatable="yes">selling</item>
+            </items>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
           </packing>
         </child>
         <child>
@@ -355,28 +408,32 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkButton" id="EXPORT_EXPLICIT">
-                <property name="label" translatable="yes">Export Explicit Exchange Rates</property>
+              <object class="GtkButton" id="export_rates">
+                <property name="label" translatable="yes">Export Best Exchange Rates</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <signal name="clicked" handler="export_rates" swapped="no"/>
               </object>
               <packing>
-                <property name="left_attach">0</property>
+                <property name="left_attach">1</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="button2">
-                <property name="label" translatable="yes">Export Best Exchange Rates</property>
+              <object class="GtkComboBoxText" id="conversion_rate_export_selector">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <signal name="clicked" handler="export_best_rates" swapped="no"/>
+                <property name="can_focus">False</property>
+                <property name="active_id">buying</property>
+                <items>
+                  <item id="Explicit Buying" translatable="yes">Explicit Buying</item>
+                  <item id="Explicit Selling" translatable="yes">Explicit Selling</item>
+                  <item id="Best Buying" translatable="yes">Best Buying</item>
+                  <item id="Best Selling" translatable="yes">Best Selling</item>
+                </items>
               </object>
               <packing>
-                <property name="left_attach">1</property>
+                <property name="left_attach">0</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
