@@ -1,5 +1,5 @@
 import pickle
-from Graph import Graph, FILE_LOCATION
+from Graph import Graph, FILE_LOCATION, generateDemoGraph
 from ExchangeRate import ExchangeRate
 from EventHandler import EventHandler
 import gi
@@ -29,18 +29,7 @@ def main():
   converter = Converter()
   converter.run()
 
-def generateDemoGraph():
-  graph = Graph()
-  for name in ["GBP", "USD", "EURO", "TEST", "YEN"]:
-      graph.addNode(name)
-      
-  graph.addLink("GBP", "USD", ExchangeRate(1.6))
-  graph.addLink("USD", "EURO", ExchangeRate(1.2))
-  graph.addLink("EURO", "YEN", ExchangeRate(1.4))
-  graph.addLink("TEST", "YEN", ExchangeRate(2))
-  graph.addLink("GBP", "TEST", ExchangeRate(2.4))
-  graph.addLink("USD", "YEN", ExchangeRate(0.5))
-  return graph
+
   
 if __name__ == "__main__":
   main()

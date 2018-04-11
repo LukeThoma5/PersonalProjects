@@ -7,7 +7,8 @@ from Node import Node
 import pickle
 import csv
 
-FILE_LOCATION = "exchangeRates.bin" 
+FILE_LOCATION = "exchangeRates.bin"
+DUMMY_NAME = "DUMMY"
 class Graph:
     
   def __init__(self):
@@ -15,13 +16,14 @@ class Graph:
     # To Node Objects
     self.allNodes = {}
     
-  def save(self):
+  def save(self, location=FILE_LOCATION):
     # Open the file and save the state of the graph
-    with open(FILE_LOCATION, "wb") as binaryFile:
+    with open(location, "wb") as binaryFile:
       pickle.dump(self, binaryFile)
         
   def addNode(self, name):
-    self.allNodes[name] = Node(name)
+    if not self.nodeExists(name):
+      self.allNodes[name] = Node(name)
 
   def nodeExists(self, name):
     # If in the list of nodes then it exists
@@ -31,12 +33,17 @@ class Graph:
         
   def getNode(self, name):
     # Thin wrapper to encapsulate all Nodes
-    return self.allNodes[name]
+    try:
+      return self.allNodes[name]
+    except:
+      return Node(DUMMY_NAME)
     
   def addLink(self, nameA, nameB, buying, selling=None):
     # Get the nodes out
     nodeA = self.getNode(nameA)
     nodeB = self.getNode(nameB)
+    if nodeA.name == DUMMY_NAME or nodeB.name == DUMMY_NAME:
+      return
     # If a link exists update it, otherwise create a new one
     if not nodeA.hasLink(nameB):
       NodeLink(nodeA, nodeB, buying, selling)
@@ -183,3 +190,16 @@ def matrixBest(graph, currentNode, comparisonNode, selector):
 def matrixDirect(graph, currentNode, comparisonNode, selector):
   # Get direct exchange rates, unsuccessful are -1
   return str(graph.getExchangeRate(currentNode, comparisonNode, selector))
+
+def generateDemoGraph():
+  graph = Graph()
+  for name in ["GBP", "USD", "EURO", "TEST", "YEN"]:
+      graph.addNode(name)
+      
+  graph.addLink("GBP", "USD", ExchangeRate(1.6, 1.5), ExchangeRate(1.4, 0.8))
+  graph.addLink("USD", "EURO", ExchangeRate(1.2))
+  graph.addLink("EURO", "YEN", ExchangeRate(1.4, 0.7), ExchangeRate(1.3, 0.9))
+  graph.addLink("TEST", "YEN", ExchangeRate(2), ExchangeRate(1, 0.6))
+  graph.addLink("GBP", "TEST", ExchangeRate(0.2, 0.2), ExchangeRate(0.15, 0.15))
+  graph.addLink("USD", "YEN", ExchangeRate(0.5, 1.25))
+  return graph
