@@ -23,12 +23,12 @@ class Node:
         return True
     return False
 
-  def updateLink(self, nodeName, A2B, B2A=None):
+  def updateLink(self, nodeName, Buying, Selling=None):
     # Find the link with the corresponding node,
     # Then update the value
     for link in self.nodes:
       if link.containsNode(nodeName):
-        link.updateLink(self.name, nodeName, A2B, B2A)
+        link.updateLink(self.name, nodeName, Buying, Selling)
  
   def print(self):
     print("-"*30)

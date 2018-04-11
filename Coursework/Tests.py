@@ -1,7 +1,9 @@
 from ConversionResult import ConversionResult
 from Node import Node
-from Graph import Graph, generateDemoGraph
+from NodeLink import NodeLink
+from Graph import Graph, generateDemoGraph, matrixBest, matrixDirect
 from ExchangeRate import ExchangeRate
+from decimal import *
 import random
 import pickle
 
@@ -10,6 +12,15 @@ def extractName(item):
     return item.__name__
   return str(item)
 
+def isClose(a, b):
+    c = round(Decimal(a), 6)
+    d = round(Decimal(b), 6)
+    return c == d
+
+buying_selector = lambda x: x.buying
+selling_selector = lambda x: x.selling
+buying_selector.__name__ = "buying_selector"
+selling_selector.__name__ = "selling_selector"
 class TestSuite:
   def __init__(self, name):
     self.tests = []
@@ -27,9 +38,10 @@ class TestSuite:
           pResult = "Passed"
         else:
           pResult = "Failed"
-      except:
+      except Exception as e:
         result = False
         pResult = "Threw"
+        print(e)
       output("{} : {}".format(pResult, test.__name__))
       if not result:
         self.failed += 1
@@ -50,7 +62,6 @@ class TestSuiteTests(TestSuite):
       self.no_dummy_subject_throws,
       self.cases_work
     ]
-    self.run()
 
   def no_dummy_subject_throws(self):
     subject = TestSuite("DummySubjectSuite")
@@ -81,7 +92,6 @@ class ConversionResultTests(TestSuite):
       self.full_test,
       self.test_chaining
     ]
-    self.run()
     
   def getDummySubject(self):
     return ConversionResult(3.14159, [Node("from"), Node("to")])
@@ -109,40 +119,146 @@ class ConversionResultTests(TestSuite):
     return subject.value == 15.70795
 
 
+class NodeTests(TestSuite):
+  def __init__(self):
+    super().__init__(type(self).__name__)
+    self.tests = [
+      self.add_link_adds_link,
+      self.case(self.has_link_test, "B", True),
+      self.case(self.has_link_test, "None Existent", False),
+      self.case(self.update_link_test, "B", 2),
+      self.case(self.update_link_test, "None Existent", -1),
+    ]
+
+  def getDummySubject(self):
+    A = Node("A")
+    B = Node("B")
+    NodeLink(A, B, ExchangeRate(1))
+    return A
+    
+  def add_link_adds_link(self):
+    subject = self.getDummySubject()
+    return len(subject.nodes) == 1
+
+  def has_link_test(self, name, expected):
+    subject = self.getDummySubject()
+    return subject.hasLink(name) == expected
+
+  def update_link_test(self, nodeName, value):
+    subject = self.getDummySubject()
+    subject.updateLink(nodeName, ExchangeRate(2))
+    return subject.getExchangeRate(nodeName, buying_selector) == value
+
+class NodeLinkTests(TestSuite):
+  def __init__(self):
+    super().__init__(type(self).__name__)
+    ordered_compare = lambda x: x.A2B == 3 and x.B2A == 10
+    ordered_compare.__name__ = "ordered_compare"
+    out_of_order_compare = lambda x: x.B2A == 3 and x.A2B == 10
+    out_of_order_compare.__name__ = "out_of_order_compare"
+    self.tests = [
+      self.get_connecting_node_test,
+      self._copy_to_selling_test,
+      self.case(self.contains_node_test, "A", True),
+      self.case(self.contains_node_test, "B", True),
+      self.case(self.contains_node_test, "Nope", False),
+      self.case(self.exchange_rate_test, "A", buying_selector, 1),
+      self.case(self.exchange_rate_test, "A", selling_selector, 2),
+      self.case(self.exchange_rate_test, "B", buying_selector, 1),
+      self.case(self.exchange_rate_test, "B", selling_selector, 0.5),
+      self.case(self.update_link_test, "A", "B", ordered_compare, buying_selector),
+      self.case(self.update_link_test, "B", "A", out_of_order_compare, buying_selector),
+      self.case(self.update_link_test, "A", "B", ordered_compare, selling_selector),
+      self.case(self.update_link_test, "B", "A", out_of_order_compare, selling_selector),
+    ]
+
+  def getDummySubject(self):
+    self.A = Node("A")
+    self.B = Node("B")
+    return NodeLink(self.A, self.B, ExchangeRate(1), ExchangeRate(2))
+  
+  def get_connecting_node_test(self):
+    subject = self.getDummySubject()
+    return subject.getConnectingNode(self.A) is self.B and subject.getConnectingNode(self.B) is self.A
+    
+  def _copy_to_selling_test(self):
+    subject = self.getDummySubject()
+    subject._copyToSelling()
+    return subject.selling.A2B == subject.buying.A2B and subject.selling.B2A == subject.buying.B2A
+
+  def contains_node_test(self, name, value):
+    subject = self.getDummySubject()
+    return subject.containsNode(name) == value
+
+  def exchange_rate_test(self, name, selector, value):
+    subject = self.getDummySubject()
+    if name == "A":
+      current = self.A
+    else:
+      current = self.B
+    return isClose(subject.getExchangeRate(current, selector), value)
+
+  def update_link_test(self, A, B, comparer, selector):
+    subject = self.getDummySubject()
+    subject.updateLink(A, B, ExchangeRate(3, 10))
+    rate = selector(subject)
+    return comparer(rate)
+
+class ExchangeRateTests(TestSuite):
+  def __init__(self):
+    super().__init__(type(self).__name__)
+    self.tests = [
+      self.sets_fields_correctly,
+      self.defaults_fields
+    ]
+
+  def sets_fields_correctly(self):
+    subject = ExchangeRate(1.5, 1/3)
+    return subject.A2B == Decimal(1.5) and subject.B2A == Decimal(1/3)
+
+  def defaults_fields(self):
+    subject = ExchangeRate(2)
+    return subject.A2B == Decimal(2) and subject.B2A == Decimal(0.5)
+
 class GraphTests(TestSuite):
   def __init__(self):
     super().__init__(type(self).__name__)
-    buying_selector = lambda x: x.buying
-    selling_selector = lambda x: x.selling
-    buying_selector.__name__ = "buying_selector"
-    selling_selector.__name__ = "selling_selector"
     self.tests = [
-      # self.demo_graph_made_successfully,
-      # self.get_all_currencies_tests,
-      # self.case(self.node_exists, "USD", True),
-      # self.case(self.node_exists, "Non Existent", False),
-      # self.case(self.get_node_expected, "USD", "USD"), #Gets right node
-      # self.case(self.get_node_expected, "NONE EXISTENT", "DUMMY"), # Returns dummy node as none found
-      # self.save_load_correctly,
-      # self.case(self.add_node_correctly, "NEW", 6), # New is added
-      # self.case(self.add_node_correctly, "USD", 5), # Existing is ignored
-      # self.case(self.add_link_valid_nodes, "USD", "TEST", 4),
-      # self.case(self.add_link_valid_nodes, "USD", "NONE EXISTENT", 3),
-      # self.case(self.get_exchange_rate_selector, "TEST", "YEN", buying_selector, 2),
-      # self.case(self.get_exchange_rate_selector, "YEN", "TEST", buying_selector, 0.5),
-      # self.case(self.get_exchange_rate_selector, "TEST", "YEN", selling_selector, 1),
-      # self.case(self.get_exchange_rate_selector, "YEN", "TEST", selling_selector, 0.6),
-      # self.case(self.get_exchange_rate_selector, "USD", "TEST", buying_selector, -1), # Non exitent direct link
-      # self.case(self.get_exchange_rate_selector, "USD", "TEST", selling_selector, -1), # Non exitent direct link
-      # # Direct route
-      # self.case(self.get_exchange_rate_selector, "GBP", "TEST", buying_selector, 0.2),
-      # # Indirect route
-      # self.case(self.get_exchange_rate_best, "GBP", "TEST", buying_selector, 1.344),
+      self.demo_graph_made_successfully,
+      self.get_all_currencies_tests,
+      self.case(self.node_exists, "USD", True),
+      self.case(self.node_exists, "Non Existent", False),
+      self.case(self.get_node_expected, "USD", "USD"), #Gets right node
+      self.case(self.get_node_expected, "NONE EXISTENT", "DUMMY"), # Returns dummy node as none found
+      self.save_load_correctly,
+      self.case(self.add_node_correctly, "NEW", 6), # New is added
+      self.case(self.add_node_correctly, "USD", 5), # Existing is ignored
+      self.case(self.add_link_valid_nodes, "USD", "TEST", 4),
+      self.case(self.add_link_valid_nodes, "USD", "NONE EXISTENT", 3),
+      self.case(self.get_exchange_rate_selector, "TEST", "YEN", buying_selector, 2),
+      self.case(self.get_exchange_rate_selector, "YEN", "TEST", buying_selector, 0.5),
+      self.case(self.get_exchange_rate_selector, "TEST", "YEN", selling_selector, 1),
+      self.case(self.get_exchange_rate_selector, "YEN", "TEST", selling_selector, 0.6),
+      self.case(self.get_exchange_rate_selector, "USD", "TEST", buying_selector, -1), # Non exitent direct link
+      self.case(self.get_exchange_rate_selector, "USD", "TEST", selling_selector, -1), # Non exitent direct link
+      # Direct route
+      self.case(self.get_exchange_rate_selector, "GBP", "TEST", buying_selector, 0.2),
+      # Indirect route
+      self.case(self.get_exchange_rate_best, "GBP", "TEST", buying_selector, 1.344),
       # Same for selling route
       self.case(self.get_exchange_rate_selector, "GBP", "TEST", selling_selector, 0.15),
       self.case(self.get_exchange_rate_best, "GBP", "TEST", selling_selector, 1.3104),
-    ]
-    self.run()    
+      self.case(self.get_all_rates_gets_every_rate, buying_selector),
+      self.case(self.get_all_rates_gets_every_rate, selling_selector),
+      self.case(self.get_all_rates_gets_every_rate_even_with_unconnected, buying_selector),
+      self.case(self.get_all_rates_gets_every_rate_even_with_unconnected, selling_selector),
+      self.case(self.updated_rate_is_used, buying_selector, 3.5, True),
+      self.case(self.updated_rate_is_used, selling_selector, 2.5, False),
+      self.case(self.calc_matrix_is_as_expected, matrixDirect, buying_selector, self.matrix_direct_buying),
+      self.case(self.calc_matrix_is_as_expected, matrixDirect, selling_selector, self.matrix_direct_selling),
+      self.case(self.calc_matrix_is_as_expected, matrixBest, buying_selector, self.matrix_best_buying),
+      self.case(self.calc_matrix_is_as_expected, matrixBest, selling_selector, self.matrix_best_selling)
+    ] 
 
   def getDummySubject(self):
     return generateDemoGraph()
@@ -184,21 +300,74 @@ class GraphTests(TestSuite):
   def get_exchange_rate_selector(self, nameA, nameB, selector, value):
      subject = self.getDummySubject()
      rate = subject.getExchangeRate(nameA, nameB, selector)
-     print(rate)
-     return  rate == value
+     return  isClose(rate, value)
 
   def get_exchange_rate_best(self, nameA, nameB, selector, value):
     subject = self.getDummySubject()
     rate = subject.getExchangeRateBest(nameA, nameB, selector)
-    print(rate.rate, value, rate.rate == value)
     if not rate.successful:
       return False
-    return rate.rate == value
-  
+    return isClose(rate.rate, value)
+
+  def get_all_rates_gets_every_rate(self, selector):
+    subject = self.getDummySubject()
+    GBP = subject.getNode("GBP")
+    USD = subject.getNode("USD")
+    rates = subject.getAllRates(USD, GBP, [], selector)
+    return len(rates) == 3
+
+  def get_all_rates_gets_every_rate_even_with_unconnected(self, selector):
+    subject = self.getDummySubject()
+    subject.addNode("OTHER")
+    GBP = subject.getNode("GBP")
+    USD = subject.getNode("USD")
+    rates = subject.getAllRates(USD, GBP, [], selector)
+    return len(rates) == 3
+
+  def updated_rate_is_used(self, selector, newValue, buying):
+    subject = self.getDummySubject()
+    original = subject.getExchangeRate("GBP", "TEST", selector)
+    buyingRate = ExchangeRate(10, 10)
+    sellingRate = ExchangeRate(10, 10)
+    if buying:
+      buyingRate = ExchangeRate(newValue, newValue)
+    else:
+      sellingRate = ExchangeRate(newValue, newValue)
+    subject.addLink("GBP", "TEST", buyingRate, sellingRate)
+    newRate = subject.getExchangeRate("GBP", "TEST", selector)
+    return isClose(newRate, newValue) and original != newRate
+
+  def calc_matrix_is_as_expected(self, delegate, selector, result):
+    subject = self.getDummySubject()
+    matrix = subject.calcRouteMatrix(delegate, selector)
+    for index, row in enumerate(matrix):
+      for index2, item in enumerate(row):
+        if not isClose(result[index][index2], item):
+          return False
+    return True
+
+  matrix_direct_buying = [[-1.0, -1.0, -1.0, 0.833333, 1.4], [-1.0, -1.0, 0.2, 1.6, -1.0], [-1.0, 0.2, -1.0, -1.0, 2.0], [1.2, 1.5, -1.0, -1.0, 0.5], [0.7, -1.0, 0.5, 1.25, -1.0]]
+  matrix_direct_selling = [[-1.0, -1.0, -1.0, 0.833333, 1.3], [-1.0, -1.0, 0.15, 1.4, -1.0], [-1.0, 0.15, -1.0, -1.0, 1.0], [1.2, 0.8, -1.0, -1.0, 0.5], [0.9, -1.0, 0.6, 1.25, -1.0]]
+  matrix_best_buying = [[-1.0, 2.625, 0.7, 1.75, 1.4], [1.92, -1.0, 1.344, 1.6, 2.688], [3.0, 3.75, -1.0, 2.5, 2.0], [1.2, 1.5, 0.84, -1.0, 1.68], [1.5, 1.875, 0.5, 1.25, -1.0]]
+  matrix_best_selling = [[-1.0, 1.3, 0.78, 1.625, 1.3], [1.68, -1.0, 1.3104, 1.4, 2.184], [1.5, 1.0, -1.0, 1.25, 1.0], [1.2, 0.8, 0.936, -1.0, 1.56], [1.5, 1.0, 0.6, 1.25, -1.0]]
+
 def run_tests():
-  ConversionResultTests()
-  GraphTests()
-  TestSuiteTests()
+  testSuites = [
+    ConversionResultTests(),
+    GraphTests(),
+    TestSuiteTests(),
+    NodeTests(),
+    ExchangeRateTests(),
+    NodeLinkTests()
+  ]
+  total = 0
+  failed = 0
+  for tests in testSuites:
+    tests.run()
+    total += len(tests.tests)
+    failed += tests.failed
+  print("-"*50)
+  print("Completed {} tests with {} failures".format(total, failed))
 
 if __name__ == "__main__":
   run_tests()

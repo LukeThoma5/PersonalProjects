@@ -75,7 +75,7 @@ class EventHandler:
       return
     amount = self.get("CURRENCY_AMOUNT").get_text() # Get the amount to convert
     conversionResult = self.graph.getExchangeRateBest(fromC, toC, selector) # Get the conversion rate
-    conversionResult.updateValue(float(amount)) # Calculate the converted value
+    conversionResult.updateValue(Decimal(amount)) # Calculate the converted value
     # Show the result
     self.get("CONVERSION_RESULT").get_buffer().set_text(conversionResult.getResultFormatted())
     # Show the explanation of how the rate was selected
@@ -101,17 +101,17 @@ class EventHandler:
     A2B_sell = self.get("A2B_RATE_selling").get_text()
     B2A_sell = self.get("B2A_RATE_selling").get_text()
     # If we have a rate, convert it to float
-    if B2A_buy is not None:
-      B2A_buy = float(B2A_buy)
-    if B2A_sell is not None:
-      B2A_sell = float(B2A_sell)
+    # if B2A_buy is not None:
+    #   B2A_buy = float(B2A_buy)
+    # if B2A_sell is not None:
+    #   B2A_sell = float(B2A_sell)
     selling = None # Initialise selling to nothing
     if A2B_sell is not None: # if we have the minimal needed to create an exchange rate
-      selling = ExchangeRate(float(A2B_sell), B2A_sell) # Create a selling rate
+      selling = ExchangeRate(A2B_sell, B2A_sell) # Create a selling rate
     # Get the currencies involved
     A = self.get("CURRENCY_FROM_ADMIN").get_active_text()
     B = self.get("CURRENCY_TO_ADMIN").get_active_text()
     # Add or update the link
-    self.graph.addLink(A, B, ExchangeRate(float(A2B_buy), B2A_buy), selling)
+    self.graph.addLink(A, B, ExchangeRate(A2B_buy, B2A_buy), selling)
 
   ### </Admin Screen> ###

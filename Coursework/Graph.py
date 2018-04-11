@@ -148,6 +148,7 @@ class Graph:
   def calcRouteMatrix(self, delegate, selector):
     matrix = [] # The CSV data
     keys = list(self.allNodes.keys())
+    keys.sort()
     for currentNode in keys: # For all nodes create a row
       conversions = []
       for comparisonNode in keys: # for all nodes find a conversion
@@ -169,6 +170,7 @@ class Graph:
     matrix = self.calcRouteMatrix(delegate, selector)
     prettyKeys = [" "] # First cell of the csv is blank
     keys = list(self.allNodes.keys()) # All the currencies
+    keys.sort()
     prettyKeys.extend(keys) # add all the currencies 
     with open(path, 'w', newline='') as csvfile:
       writer = csv.writer(csvfile, quoting=csv.QUOTE_MINIMAL) # Open the csv file
