@@ -7,8 +7,12 @@ class ConversionResult:
 
   def updateValue(self, value):
     self.value = value * self.rate
-    return self #Allow chaining of conversion results. Fluent syntax
+    # Allow chaining of conversion results by returning self
+    # Fluent syntax
+    return self
 
+
+  ### String formatting of the result
   def getRateFormatted(self, places=2):
     return round(self.rate, places)
 
@@ -26,8 +30,4 @@ class ConversionResult:
       self.getPath(),
       self.getRateFormatted(3),
       self.successful)
-
-  def invert(self):
-    self.rate = 1 / self.rate
-    self.path.reverse()
    
