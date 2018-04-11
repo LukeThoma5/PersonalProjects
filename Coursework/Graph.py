@@ -145,6 +145,40 @@ class Graph:
     # Helper function for getting at the list of currencies to load into a drop down
     return self.allNodes.keys()
 
+  def generateBuySellData(self, currency, delegate):
+    buying = []
+    selling = []
+    currencies = []
+    for comparison in self.allNodes.keys():
+      if comparison == currency:
+        continue
+      b = float(delegate(self, currency, comparison, lambda x: x.buying))
+      s = float(delegate(self, currency, comparison, lambda x: x.selling))
+      if b > 0 and s > 0:
+        buying.append(round(b, 3))
+        selling.append(round(s, 3))
+        currencies.append(comparison)
+    return (buying, selling, currencies)
+
+  def plotBuyVsSell(self, currency, delegate, name):
+    buying, selling, currencies = self.generateBuySellData(currency, delegate)
+    fig, ax = plt.subplots()
+    ind = np.arange(len(buying))  # the x locations for the groups
+    width = 0.35  # the width of the bars
+    rects1 = ax.bar(ind - width/2, buying, width,
+                color='SkyBlue', label='Buying')
+    rects2 = ax.bar(ind + width/2, selling, width,
+                color='IndianRed', label='Selling')
+    ax.set_ylabel('Rate')
+    ax.set_title('Buying and selling Rates of {} using {}'.format(currency, name))
+    ax.set_xticks(ind)
+    ax.set_xticklabels(currencies)
+    ax.legend()
+
+    plt.show()
+
+
+
   def calcRouteMatrix(self, delegate, selector):
     matrix = [] # The CSV data
     keys = list(self.allNodes.keys())
@@ -205,3 +239,8 @@ def generateDemoGraph():
   graph.addLink("GBP", "TEST", ExchangeRate(0.2, 0.2), ExchangeRate(0.15, 0.15))
   graph.addLink("USD", "YEN", ExchangeRate(0.5, 1.25))
   return graph
+
+if __name__ == "__main__":
+  graph = generateDemoGraph()
+  graph.plotBuyVsSell("USD", matrixBest, "Best Match")
+  graph.plotBuyVsSell("USD", matrixDirect, "Direct Only")

@@ -28,10 +28,14 @@ class TestSuite:
 
   def run(self, shouldPrint=True):
     self.failed = 0
+    # Define a function so that printing can be disabled
+    # A lambda that passes all its arguments to the print function
+    # Print function is only executed if shouldPrint is true
     output = lambda *args: shouldPrint and print(*args)
     output("-"*50)
     output("Running {} tests".format(self.name))
     for test in self.tests:
+      # A test that throws is a special failing test
       try:
         result = test()
         if result:
@@ -41,16 +45,19 @@ class TestSuite:
       except Exception as e:
         result = False
         pResult = "Threw"
-        print(e)
+        
+      # Print the tests name and result
       output("{} : {}".format(pResult, test.__name__))
-      if not result:
-        self.failed += 1
+      if not result: # If it failed
+        self.failed += 1 # Increase failure count
     output("{} total tests: {} failed: {}".format(self.name, len(self.tests), self.failed))
 
   def getDummySubject(self):
     raise NotImplementedError()
 
   def case(self, function, *arg):
+    # create a lamda that calls the passed in function with the passed in arguments
+    # Done so I can get at the arguments in order to put them in the test name
     lam = lambda: function(*arg)
     lam.__name__ = "{} : [{}]".format(function.__name__, ", ".join(map(lambda x: extractName(x), arg)))
     return lam
@@ -64,22 +71,28 @@ class TestSuiteTests(TestSuite):
     ]
 
   def no_dummy_subject_throws(self):
+    # Test with no defined get dummy subject
     subject = TestSuite("DummySubjectSuite")
     subject.tests = [
       self.getDummySubject
     ]
+    # Run without printing enabled
     subject.run(False)
+    # Ensure the test failed
     return subject.failed == 1 and len(subject.tests) == 1
 
   def cases_work(self):
+    # Create a dummy test
     def dummy_test_subject(returnValue):
       return returnValue
     subject = TestSuite("CaseTestSuite")
+    # Create two tests, one that should fail by returning false
     subject.tests = [
       self.case(dummy_test_subject, True),
       self.case(dummy_test_subject, False)
     ]
     subject.run(False)
+    # Check only one of them failed
     return subject.failed == 1 and len(subject.tests) == 2
 
 
@@ -257,7 +270,9 @@ class GraphTests(TestSuite):
       self.case(self.calc_matrix_is_as_expected, matrixDirect, buying_selector, self.matrix_direct_buying),
       self.case(self.calc_matrix_is_as_expected, matrixDirect, selling_selector, self.matrix_direct_selling),
       self.case(self.calc_matrix_is_as_expected, matrixBest, buying_selector, self.matrix_best_buying),
-      self.case(self.calc_matrix_is_as_expected, matrixBest, selling_selector, self.matrix_best_selling)
+      self.case(self.calc_matrix_is_as_expected, matrixBest, selling_selector, self.matrix_best_selling),
+      self.case(self.buy_vs_sell_graph_test, "USD", matrixBest, 4),
+      self.case(self.buy_vs_sell_graph_test, "USD", matrixDirect, 3)
     ] 
 
   def getDummySubject(self):
@@ -350,6 +365,15 @@ class GraphTests(TestSuite):
   matrix_direct_selling = [[-1.0, -1.0, -1.0, 0.833333, 1.3], [-1.0, -1.0, 0.15, 1.4, -1.0], [-1.0, 0.15, -1.0, -1.0, 1.0], [1.2, 0.8, -1.0, -1.0, 0.5], [0.9, -1.0, 0.6, 1.25, -1.0]]
   matrix_best_buying = [[-1.0, 2.625, 0.7, 1.75, 1.4], [1.92, -1.0, 1.344, 1.6, 2.688], [3.0, 3.75, -1.0, 2.5, 2.0], [1.2, 1.5, 0.84, -1.0, 1.68], [1.5, 1.875, 0.5, 1.25, -1.0]]
   matrix_best_selling = [[-1.0, 1.3, 0.78, 1.625, 1.3], [1.68, -1.0, 1.3104, 1.4, 2.184], [1.5, 1.0, -1.0, 1.25, 1.0], [1.2, 0.8, 0.936, -1.0, 1.56], [1.5, 1.0, 0.6, 1.25, -1.0]]
+
+  def buy_vs_sell_graph_test(self, currency, delegate, expectedLength):
+    subject = self.getDummySubject()
+    buying, selling, currencies = subject.generateBuySellData(currency, delegate)
+    length = len(buying)
+    if (length != len(selling) or length != len(currencies)):
+      return False
+    return length == expectedLength
+    
 
 def run_tests():
   testSuites = [
