@@ -12,3 +12,6 @@ class ExchangeRate(LoggableObject):
       self.B2A = Decimal(1/self.A2B)
     else:
       self.B2A = Decimal(B2A)
+
+  def intentionally_untested_function(self):
+    pass # This function exists to prove untested functions are flagged

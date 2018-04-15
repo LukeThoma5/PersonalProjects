@@ -9,10 +9,6 @@ class LoggerSingleton:
       self.calls = {}
 
     def log(self, function, location, *args):
-      # code = inspect.stack()[1][0].f_code
-      # code = inspect.stack()[2][0].f_code
-      # location = code.co_filename.split("\\")[-1]
-      # function = code.co_name
       self.logs.append(LogCall(location, function, args))
 
     def print_funcs(self):
