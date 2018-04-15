@@ -1,6 +1,8 @@
 from ExchangeRate import ExchangeRate
-class NodeLink:
+from LoggableObject import LoggableObject
+class NodeLink(LoggableObject):
   def __init__(self, nodeA, nodeB, buying, selling=None):
+    super().__init__()
     self.buying = buying
     self.selling = selling
     # If a selling rate is not defined, copy the rate from buying
@@ -64,5 +66,5 @@ class NodeLink:
       self._copyToSelling()
 
   def print(self, selector=lambda x: x.buying):
-    print("{} => {} : {}".format(self.nodeA.name, self.nodeB.name, selector(self).A2B))
+    return "{} => {} : {}".format(self.nodeA.name, self.nodeB.name, selector(self).A2B)
  

@@ -1,7 +1,9 @@
 from decimal import *
-class ExchangeRate:
+from LoggableObject import LoggableObject
+class ExchangeRate(LoggableObject):
 
   def __init__(self, A2B, B2A=None):
+    super().__init__()
     self.A2B = Decimal(A2B)
     
     # If a valid value for the conversion in the opposite direction

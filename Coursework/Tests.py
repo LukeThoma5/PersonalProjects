@@ -4,8 +4,14 @@ from NodeLink import NodeLink
 from Graph import Graph, generateDemoGraph, matrixBest, matrixDirect
 from ExchangeRate import ExchangeRate
 from decimal import *
+from Logger import LoggerSingleton
+import inspect
 import random
 import pickle
+import csv
+import sys
+
+SKIP_USER_INPUT_TESTS = False
 
 def extractName(item):
   if hasattr(item, "__name__"):
@@ -28,6 +34,7 @@ class TestSuite:
 
   def run(self, shouldPrint=True):
     self.failed = 0
+    self.skipped = 0
     # Define a function so that printing can be disabled
     # A lambda that passes all its arguments to the print function
     # Print function is only executed if shouldPrint is true
@@ -38,17 +45,21 @@ class TestSuite:
       # A test that throws is a special failing test
       try:
         result = test()
-        if result:
+        if result is None:
+          pResult = "Skipped"
+          self.skipped += 1
+        elif result:
           pResult = "Passed"
         else:
           pResult = "Failed"
       except Exception as e:
+        print(e)
         result = False
         pResult = "Threw"
         
       # Print the tests name and result
       output("{} : {}".format(pResult, test.__name__))
-      if not result: # If it failed
+      if result == False: # If it failed. Explicit to not capture None
         self.failed += 1 # Increase failure count
     output("{} total tests: {} failed: {}".format(self.name, len(self.tests), self.failed))
 
@@ -103,7 +114,9 @@ class ConversionResultTests(TestSuite):
       self.value_updates_correctly,
       self.getRateFormatted_test,
       self.full_test,
-      self.test_chaining
+      self.test_chaining,
+      self.case(self.get_result_formatted_test, 2, "6.28"),
+      self.case(self.get_result_formatted_test, 3, "6.283"),
     ]
     
   def getDummySubject(self):
@@ -121,6 +134,11 @@ class ConversionResultTests(TestSuite):
     twoDp = subject.getRateFormatted()
     threeDp = subject.getRateFormatted(3)
     return twoDp == 3.14 and threeDp == 3.142
+
+  def get_result_formatted_test(self, places, result):
+    subject = self.getDummySubject()
+    subject.updateValue(2)
+    return subject.getResultFormatted(places) == result
 
   def full_test(self):
     '''Calls repr, getpath, str and get rate formatted'''
@@ -183,6 +201,8 @@ class NodeLinkTests(TestSuite):
       self.case(self.update_link_test, "B", "A", out_of_order_compare, buying_selector),
       self.case(self.update_link_test, "A", "B", ordered_compare, selling_selector),
       self.case(self.update_link_test, "B", "A", out_of_order_compare, selling_selector),
+      self.case(self.print_test, buying_selector, "A => B : 1"),
+      self.case(self.print_test, selling_selector, "A => B : 2")      
     ]
 
   def getDummySubject(self):
@@ -216,6 +236,10 @@ class NodeLinkTests(TestSuite):
     subject.updateLink(A, B, ExchangeRate(3, 10))
     rate = selector(subject)
     return comparer(rate)
+
+  def print_test(self, selector, result):
+    subject = self.getDummySubject()
+    return subject.print(selector) == result
 
 class ExchangeRateTests(TestSuite):
   def __init__(self):
@@ -272,11 +296,28 @@ class GraphTests(TestSuite):
       self.case(self.calc_matrix_is_as_expected, matrixBest, buying_selector, self.matrix_best_buying),
       self.case(self.calc_matrix_is_as_expected, matrixBest, selling_selector, self.matrix_best_selling),
       self.case(self.buy_vs_sell_graph_test, "USD", matrixBest, 4),
-      self.case(self.buy_vs_sell_graph_test, "USD", matrixDirect, 3)
+      self.case(self.buy_vs_sell_graph_test, "USD", matrixDirect, 3),
+      self.case(self.export_rates_tests, True, "tests-best-buying.csv", buying_selector, self.matrix_best_buying),
+      self.get_graph_data_test,
+      self.plot_graph_test,
+      self.plot_buy_vs_sell_test
     ] 
 
   def getDummySubject(self):
     return generateDemoGraph()
+
+  def export_rates_tests(self, best, path, selector, matrix):
+    subject = self.getDummySubject()
+    subject.exportRates(best, path, selector)
+    with open(path, 'r', newline='') as csvfile:
+      reader = csv.reader(csvfile, quoting=csv.QUOTE_MINIMAL)
+      reader.__next__() # Skip over header row
+      for index, row in enumerate(reader):
+        for index2, item in enumerate(row[1:]):
+          if not isClose(matrix[index][index2], item):
+            return False
+    return True
+
 
   def demo_graph_made_successfully(self):
     subject = self.getDummySubject()
@@ -361,6 +402,31 @@ class GraphTests(TestSuite):
           return False
     return True
 
+  def get_graph_data_test(self):
+    subject = self.getDummySubject()
+    plots, _ = subject.getGraphData("USD")
+    for index, row in enumerate(plots):
+      for index2, item in enumerate(row):
+        if not isClose(self.USD_GRAPH_DATA[index][index2], item):
+          return False
+    return True
+
+  def plot_graph_test(self):
+    subject = self.getDummySubject()
+    if SKIP_USER_INPUT_TESTS:
+      subject.plotGraph
+      return None
+    subject.plotGraph("USD")
+    return True # If not thrown, pass
+
+  def plot_buy_vs_sell_test(self):
+    subject = self.getDummySubject()
+    if SKIP_USER_INPUT_TESTS:
+      subject.plotBuyVsSell
+      return None
+    subject.plotBuyVsSell("USD", matrixBest, "Best TEST")
+
+  USD_GRAPH_DATA = [[1.2, 0.42, 0.35], [1.5, 0.168, 0.05], [0.84, 0.3, 0.25], [1.68, 0.6, 0.5]]
   matrix_direct_buying = [[-1.0, -1.0, -1.0, 0.833333, 1.4], [-1.0, -1.0, 0.2, 1.6, -1.0], [-1.0, 0.2, -1.0, -1.0, 2.0], [1.2, 1.5, -1.0, -1.0, 0.5], [0.7, -1.0, 0.5, 1.25, -1.0]]
   matrix_direct_selling = [[-1.0, -1.0, -1.0, 0.833333, 1.3], [-1.0, -1.0, 0.15, 1.4, -1.0], [-1.0, 0.15, -1.0, -1.0, 1.0], [1.2, 0.8, -1.0, -1.0, 0.5], [0.9, -1.0, 0.6, 1.25, -1.0]]
   matrix_best_buying = [[-1.0, 2.625, 0.7, 1.75, 1.4], [1.92, -1.0, 1.344, 1.6, 2.688], [3.0, 3.75, -1.0, 2.5, 2.0], [1.2, 1.5, 0.84, -1.0, 1.68], [1.5, 1.875, 0.5, 1.25, -1.0]]
@@ -373,7 +439,34 @@ class GraphTests(TestSuite):
     if (length != len(selling) or length != len(currencies)):
       return False
     return length == expectedLength
-    
+
+def get_methods(obj):
+  return list(
+    filter(lambda x: '__' not in x,
+      map(lambda x: "{} => {}".format(type(obj).__name__, x[0]),
+      inspect.getmembers(obj,
+      predicate=inspect.ismethod))))
+
+
+def test_completeness():
+  Objects = [
+    ConversionResult(1),
+    Graph(),
+    Node(),
+    ExchangeRate(1),
+    NodeLink(Node("A"), Node("B"), ExchangeRate(1)),
+  ]
+  logger = LoggerSingleton()
+  logger.find_unique()
+  functions = []
+  for obj in Objects:
+    functions.extend(get_methods(obj))
+  uncalled = logger.find_uncalled(functions)
+  if len(uncalled) > 0:
+    print("The following functions are untested!: {}".format(uncalled))
+  else:
+    print("All existing functions tested by unit tests")
+  
 
 def run_tests():
   testSuites = [
@@ -386,12 +479,18 @@ def run_tests():
   ]
   total = 0
   failed = 0
+  skipped = 0
   for tests in testSuites:
     tests.run()
     total += len(tests.tests)
     failed += tests.failed
+    skipped += tests.skipped
   print("-"*50)
-  print("Completed {} tests with {} failures".format(total, failed))
+  print("Completed {} tests with {} failures {} skips".format(total, failed, skipped))
+
+  test_completeness()
+
 
 if __name__ == "__main__":
+  SKIP_USER_INPUT_TESTS = len(sys.argv) == 1
   run_tests()

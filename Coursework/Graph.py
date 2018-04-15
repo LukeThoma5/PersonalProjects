@@ -4,14 +4,16 @@ from ConversionResult import ConversionResult
 from NodeLink import NodeLink
 from ExchangeRate import ExchangeRate
 from Node import Node
+from LoggableObject import LoggableObject
 import pickle
 import csv
 
 FILE_LOCATION = "exchangeRates.bin"
 DUMMY_NAME = "DUMMY"
-class Graph:
+class Graph(LoggableObject):
     
   def __init__(self):
+    super().__init__()
     # Dictionary of node names (USD, GBP ect)
     # To Node Objects
     self.allNodes = {}
@@ -114,7 +116,9 @@ class Graph:
     plotsOfPlots = [] # List of currencies conversion rates
     labels = [] # currency names
     start = self.getNode(currency) # the currency we're graphing
-    for comparison in self.allNodes.keys(): # For all currencies
+    keys = list(self.allNodes.keys())
+    keys.sort()
+    for comparison in keys: # For all currencies
       if comparison == currency: # Don't plot against yourself
         continue
       comp = self.getNode(comparison) # Get the node we're currently graphing against
@@ -125,7 +129,7 @@ class Graph:
       graphData = [] # List of successful conversions
       for conversion in conversions: 
         if conversion.successful: # Only add if was successful
-          graphData.append(conversion.rate)
+          graphData.append(float(conversion.rate))
       plotsOfPlots.append(graphData) # Add the list of conversions 
       labels.append(comparison) # Add which conversion its for
 

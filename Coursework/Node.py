@@ -1,9 +1,11 @@
-class Node:
-  
+from LoggableObject import LoggableObject
+class Node(LoggableObject):
+
   def __init__(self, name = ""):
+    super().__init__()
     self.name = name
     self.nodes = []
-        
+      
   def addLink(self, link):
     # Push the NodeLink object into the list of nodes
     self.nodes.append(link)
@@ -29,12 +31,3 @@ class Node:
     for link in self.nodes:
       if link.containsNode(nodeName):
         link.updateLink(self.name, nodeName, Buying, Selling)
- 
-  def print(self):
-    print("-"*30)
-    print(self.name, ":")
-    print(self.nodes)
-    for link in self.nodes:
-      print(link)
-      print("   ", link.getConnectingNode(self).name)
-        

@@ -1,5 +1,7 @@
-class ConversionResult:
+from LoggableObject import LoggableObject
+class ConversionResult(LoggableObject):
   def __init__(self, rate, path = [], successful=True):
+    super().__init__()
     self.rate = rate
     self.path = path
     self.value = 0
