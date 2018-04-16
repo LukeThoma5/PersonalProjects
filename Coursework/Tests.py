@@ -1,6 +1,6 @@
 from ConversionResult import ConversionResult
 from Node import Node
-from NodeLink import NodeLink
+from NodeLink import NodeLink, buying_selector, selling_selector
 from Graph import Graph, generateDemoGraph, matrixBest, matrixDirect
 from ExchangeRate import ExchangeRate
 from decimal import *
@@ -11,7 +11,7 @@ import pickle
 import csv
 import sys
 
-SKIP_USER_INPUT_TESTS = False
+SKIP_USER_INPUT_TESTS = True # Ran on load, only do graph ones if asked
 
 def extractName(item):
   if hasattr(item, "__name__"):
@@ -23,10 +23,6 @@ def isClose(a, b):
     d = round(Decimal(b), 6)
     return c == d
 
-buying_selector = lambda x: x.buying
-selling_selector = lambda x: x.selling
-buying_selector.__name__ = "buying_selector"
-selling_selector.__name__ = "selling_selector"
 class TestSuite:
   def __init__(self, name):
     self.tests = []
@@ -78,7 +74,8 @@ class TestSuiteTests(TestSuite):
     super().__init__(type(self).__name__)
     self.tests = [
       self.no_dummy_subject_throws,
-      self.cases_work
+      self.cases_work,
+      self.only_a_single_logger_exists
     ]
 
   def no_dummy_subject_throws(self):
@@ -105,6 +102,13 @@ class TestSuiteTests(TestSuite):
     subject.run(False)
     # Check only one of them failed
     return subject.failed == 1 and len(subject.tests) == 2
+
+  def only_a_single_logger_exists(self):
+    logger1 = LoggerSingleton()
+    logger2 = LoggerSingleton()
+    # The is word only matches if they have the same memory address
+    # eg same object
+    return logger1.logs is logger2.logs
 
 
 class ConversionResultTests(TestSuite):
@@ -404,7 +408,7 @@ class GraphTests(TestSuite):
 
   def get_graph_data_test(self):
     subject = self.getDummySubject()
-    plots, _ = subject.getGraphData("USD")
+    plots, _ = subject.getGraphData("USD", lambda x: x.buying)
     for index, row in enumerate(plots):
       for index2, item in enumerate(row):
         if not isClose(self.USD_GRAPH_DATA[index][index2], item):
@@ -416,7 +420,7 @@ class GraphTests(TestSuite):
     if SKIP_USER_INPUT_TESTS:
       subject.plotGraph
       return None
-    subject.plotGraph("USD")
+    subject.plotGraph("USD", lambda x: x.buying)
     return True # If not thrown, pass
 
   def plot_buy_vs_sell_test(self):
@@ -425,6 +429,7 @@ class GraphTests(TestSuite):
       subject.plotBuyVsSell
       return None
     subject.plotBuyVsSell("USD", matrixBest, "Best TEST")
+    return True
 
   USD_GRAPH_DATA = [[1.2, 0.42, 0.35], [1.5, 0.168, 0.05], [0.84, 0.3, 0.25], [1.68, 0.6, 0.5]]
   matrix_direct_buying = [[-1.0, -1.0, -1.0, 0.833333, 1.4], [-1.0, -1.0, 0.2, 1.6, -1.0], [-1.0, 0.2, -1.0, -1.0, 2.0], [1.2, 1.5, -1.0, -1.0, 0.5], [0.7, -1.0, 0.5, 1.25, -1.0]]
@@ -462,8 +467,15 @@ def test_completeness():
   for obj in Objects:
     functions.extend(get_methods(obj))
   uncalled = logger.find_uncalled(functions)
+  allCalls = list(logger.calls.items())
+  allCalls.sort(key=lambda x: x[1], reverse=True)
+  print("Most common function calls:")
+  for call in zip(allCalls, range(0,10)):
+    print("{} calls to {}".format(call[0][1], call[0][0]))
   if len(uncalled) > 0:
-    print("The following functions are untested!: {}".format(uncalled))
+    print("The following functions are untested!:")
+    for uncalledFunc in uncalled:
+      print("WARN:", uncalledFunc)
   else:
     print("All existing functions tested by unit tests")
   
@@ -487,8 +499,9 @@ def run_tests():
     skipped += tests.skipped
   print("-"*50)
   print("Completed {} tests with {} failures {} skips".format(total, failed, skipped))
-
+  print("To enable full testing run with noskip flag enabled. '$ py Tests.py noskip'")
   test_completeness()
+  return (total, failed, skipped)
 
 
 if __name__ == "__main__":

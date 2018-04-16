@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from ConversionResult import ConversionResult
-from NodeLink import NodeLink
+from NodeLink import NodeLink, buying_selector, selling_selector
 from ExchangeRate import ExchangeRate
 from Node import Node
 from LoggableObject import LoggableObject
@@ -112,7 +112,7 @@ class Graph(LoggableObject):
     # If no conversions then return unsuccessful
     return ConversionResult(-1, [], successful=False)
   
-  def getGraphData(self, currency):
+  def getGraphData(self, currency, selector):
     plotsOfPlots = [] # List of currencies conversion rates
     labels = [] # currency names
     start = self.getNode(currency) # the currency we're graphing
@@ -124,7 +124,7 @@ class Graph(LoggableObject):
       comp = self.getNode(comparison) # Get the node we're currently graphing against
       # Get all the rates to go from the start to the node we're currently plotting
       # It's a list of ConversionResult objects, will map to just sucessful rates
-      conversions = self.getAllRates(start, comp, [], lambda x: x.buying)
+      conversions = self.getAllRates(start, comp, [], selector)
 
       graphData = [] # List of successful conversions
       for conversion in conversions: 
@@ -136,9 +136,9 @@ class Graph(LoggableObject):
     return (plotsOfPlots, labels) # Return a tuple of the values and labels
     
 
-  def plotGraph(self, currency):
+  def plotGraph(self, currency, selector):
     # Get all the successful conversions
-    plotsOfPlots, labels = self.getGraphData(currency)
+    plotsOfPlots, labels = self.getGraphData(currency, selector)
     fig, ax = plt.subplots()
     # Create a boxplot with the various currencies
     plt.boxplot(plotsOfPlots, labels=labels)
@@ -156,8 +156,8 @@ class Graph(LoggableObject):
     for comparison in self.allNodes.keys():
       if comparison == currency:
         continue
-      b = float(delegate(self, currency, comparison, lambda x: x.buying))
-      s = float(delegate(self, currency, comparison, lambda x: x.selling))
+      b = float(delegate(self, currency, comparison, buying_selector))
+      s = float(delegate(self, currency, comparison, selling_selector))
       if b > 0 and s > 0:
         buying.append(round(b, 3))
         selling.append(round(s, 3))

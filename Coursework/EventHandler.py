@@ -1,7 +1,10 @@
 import gi
+from decimal import *
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 from ExchangeRate import ExchangeRate
+from NodeLink import buying_selector, selling_selector
+from Tests import run_tests
 
 class EventHandler:
   def __init__(self, graph, converter):
@@ -18,15 +21,23 @@ class EventHandler:
     password = self.get("PASSWORD").get_text()
     # Only continue if user and password match
     if username == "admin" and password == "admin":
-      self.converter.MainWindow.show_all()
+      self.show_main_screen()
       self.get("BTN_MW_ADMIN").show()
       self.converter.LoginWindow.destroy() # Remove the login window
 
   def guest_login(self, _):
-    self.converter.MainWindow.show_all()
+    self.show_main_screen()
     self.get("BTN_MW_ADMIN").hide() # HIide the admin button if not logged in
     self.converter.LoginWindow.destroy()
 
+  def show_main_screen(self):
+    self.converter.MainWindow.show_all()
+    results = run_tests()
+    if results[1] > 0:
+      color = 'yellow'
+    else:
+      color = 'green'
+    self.get("test_indicator").set_color(Gdk.color_parse(color))
   ### </Login Screen> ###
 
   ### <Main Screen> ###
@@ -44,11 +55,22 @@ class EventHandler:
     mode = self.get("conversion_rate_export_selector").get_active_text()
     # Select which rate to use from the dropdown text
     if "Buying" in mode:
-      selector = lambda x: x.buying
+      selector = buying_selector
     else:
-      selector = lambda x: x.selling
+      selector = selling_selector
     # Save the rates to file, using the file with the dropdowns text in the filename
     self.graph.exportRates("Best" in mode, "rates.{}.csv".format(mode.replace(" ", "_")), selector)
+
+  def graph_rates_clicked(self, _):
+    mode = self.get("conversion_rate_export_selector").get_active_text()
+    if "Buying" in mode:
+      selector = buying_selector
+    else:
+      selector = selling_selector
+    
+    code = self.get("graph_currency").get_text().upper()
+    self.graph.plotGraph(code, selector)
+
   ### </Main Screen> ###
 
   ### <Currency Converter Screen> ###
@@ -60,8 +82,8 @@ class EventHandler:
 
   def getSelector(self, option):
     if option == "buying":
-      return lambda x: x.buying
-    return lambda x: x.selling
+      return buying_selector
+    return selling_selector
 
   def convert_currency(self, _):
     # Get the currencies to convert

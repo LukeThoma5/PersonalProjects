@@ -1,4 +1,5 @@
 from LoggableObject import LoggableObject
+from decimal import *
 class ConversionResult(LoggableObject):
   def __init__(self, rate, path = [], successful=True):
     super().__init__()

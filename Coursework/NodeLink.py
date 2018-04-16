@@ -1,5 +1,12 @@
 from ExchangeRate import ExchangeRate
 from LoggableObject import LoggableObject
+
+def buying_selector(rate):
+  return rate.buying
+
+def selling_selector(rate):
+  return rate.selling
+
 class NodeLink(LoggableObject):
   def __init__(self, nodeA, nodeB, buying, selling=None):
     super().__init__()
@@ -24,7 +31,7 @@ class NodeLink(LoggableObject):
       return self.nodeB
     return self.nodeA
     
-  def getExchangeRate(self, current, selector=lambda x: x.buying):
+  def getExchangeRate(self, current, selector=buying_selector):
     # If at A, get the rate from A => B
     # Use the selector to use either the buying or selling rate
     if (self.nodeA is current):
@@ -35,7 +42,7 @@ class NodeLink(LoggableObject):
     # If either of the nodes are nodes that are defined before
     return (self.nodeA.name == nodeName or self.nodeB.name == nodeName)
 
-  def _updateLink(self, A, B, A2B, B2A=None, selector=lambda x: x.buying):
+  def _updateLink(self, A, B, A2B, B2A=None, selector=buying_selector):
     # Pull the exchange rate out
     rate = selector(self)
 
@@ -57,14 +64,17 @@ class NodeLink(LoggableObject):
 
   def updateLink(self, A, B, buying, selling=None):
     # Update the buying link using the helper
-    self._updateLink(A, B, buying.A2B, buying.B2A, lambda x: x.buying)
+    self._updateLink(A, B, buying.A2B, buying.B2A, buying_selector)
     if selling is not None:
       # If selling is defined, update it with the passed in values
-      self._updateLink(A, B, selling.A2B, selling.B2A, lambda x: x.selling)
+      self._updateLink(A, B, selling.A2B, selling.B2A, selling_selector)
     else:
       # Otherwise copy the updated buying rate
       self._copyToSelling()
 
-  def print(self, selector=lambda x: x.buying):
+  def print(self, selector=buying_selector):
     return "{} => {} : {}".format(self.nodeA.name, self.nodeB.name, selector(self).A2B)
+
+
+
  

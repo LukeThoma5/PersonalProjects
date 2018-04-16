@@ -25,7 +25,6 @@ class LoggerSingleton:
           self.calls[key] += 1
         else:
           self.calls[key] = 1
-      print(self.calls)
 
     def find_uncalled(self, functions):
       uncalled = []
@@ -37,7 +36,9 @@ class LoggerSingleton:
 
 
   def __init__(self):
+    # If the singleton hasn't been constructed
     if not LoggerSingleton.instance:
+      # Make a new singleton. instance is static so only 1 exists
       LoggerSingleton.instance = LoggerSingleton.__Logger()
 
   # Allow the singleton to be accessed as if it was __Logger
@@ -46,6 +47,7 @@ class LoggerSingleton:
     return getattr(self.instance, name)
 
 class LogCall:
+  # Object to store the object, its method and what arguments its invoked with
   def __init__(self, location, function, *args):
     self.location = location
     self.function = function

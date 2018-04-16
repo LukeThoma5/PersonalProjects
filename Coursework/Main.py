@@ -2,6 +2,7 @@ import pickle
 from Graph import Graph, FILE_LOCATION, generateDemoGraph
 from ExchangeRate import ExchangeRate
 from EventHandler import EventHandler
+from Logger import LoggerSingleton
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
@@ -10,6 +11,7 @@ class Converter:
   def __init__(self):
     try:
       self.graph = pickle.load(open(FILE_LOCATION, "rb"))
+      LoggerSingleton() # Initialise the logger when creating from binary file
     except:
       self.graph = generateDemoGraph()  
 
